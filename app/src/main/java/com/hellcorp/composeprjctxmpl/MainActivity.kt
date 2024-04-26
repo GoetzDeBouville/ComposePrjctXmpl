@@ -17,6 +17,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -77,27 +78,19 @@ class MainActivity : ComponentActivity() {
 }
 
 @Composable
-fun ContactDetails(contact: Contact) {
-    val str = StringBuilder()
-    str.append(contact.name[0])
-    str.append(contact.familyName[0])
-    val initials = str.toString().uppercase()
-    str.clear()
-    str.append(contact.name)
-    contact.fathersName?.let {
-        str.append(" $it")
-    }
-    val namefathersName = str.toString()
+fun ContactDetails(modifier: Modifier = Modifier, contact: Contact) {
+    val initials = remember { buildInitials(contact.name, contact.familyName) }
+    val fathersName = remember { buildNameFathersName(contact.name, contact.fathersName) }
 
     Box(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
             .padding(top = 16.dp),
         contentAlignment = Alignment.Center
     ) {
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
             Box(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = modifier.fillMaxWidth(),
                 contentAlignment = Alignment.Center
             ) {
                 if (contact.imageRes == null) {
@@ -106,24 +99,20 @@ fun ContactDetails(contact: Contact) {
                         contentDescription = null,
                         tint = Color.LightGray
                     )
+                    Text(
+                        text = initials,
+                        style = MaterialTheme.typography.titleMedium
+                    )
                 } else {
                     Image(
                         painter = painterResource(id = contact.imageRes),
                         contentDescription = null
                     )
                 }
-
-                if (contact.imageRes == null) {
-                    Text(
-                        text = initials,
-                        style = MaterialTheme.typography.titleMedium
-                    )
-                }
             }
 
-
             Text(
-                text = namefathersName,
+                text = fathersName,
                 style = MaterialTheme.typography.titleLarge,
                 fontWeight = FontWeight.Bold
             )
@@ -137,13 +126,13 @@ fun ContactDetails(contact: Contact) {
                     Image(
                         painter = painterResource(id = android.R.drawable.star_big_on),
                         contentDescription = null,
-                        modifier = Modifier.padding(start = 8.dp)
+                        modifier = modifier.padding(start = 8.dp)
                     )
                 }
             }
 
             Column(
-                modifier = Modifier.padding(top = 32.dp),
+                modifier = modifier.padding(top = 32.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 InfoRow(resource = R.string.phone, data = contact.phone)
@@ -155,34 +144,43 @@ fun ContactDetails(contact: Contact) {
     }
 }
 
+private fun buildInitials(name: String, familyName: String) =
+    (name.first().toString() + familyName.first().toString()).uppercase()
+
+
+private fun buildNameFathersName(name: String, fathersName: String?): String {
+    val str = StringBuilder(name)
+    fathersName?.let { str.append(" $it") }
+    return str.toString()
+}
+
 @Composable
-fun InfoRow(resource: Int, data: String?) {
+fun InfoRow(modifier: Modifier = Modifier, resource: Int, data: String?) {
     data?.let {
         Row(
-            modifier = Modifier.padding(top = 8.dp),
+            modifier = modifier.padding(top = 8.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Row(modifier = Modifier.weight(1f)) {
-                Spacer(modifier = Modifier.weight(1f))
+            Row(modifier = modifier.weight(1f)) {
+                Spacer(modifier = modifier.weight(1f))
                 Text(
                     text = "${stringResource(id = resource)}: ",
                     fontStyle = FontStyle.Italic
                 )
             }
-            Row(modifier = Modifier.weight(1f)) {
+            Row(modifier = modifier.weight(1f)) {
                 Text(
-                    modifier = Modifier.weight(2f),
+                    modifier = modifier.weight(2f),
                     text = data,
                     style = MaterialTheme.typography.titleMedium
                 )
             }
-
         }
     }
 }
 
 @Preview(
-    device = "spec:width=411dp,height=891dp",
+    device = "spec:width=400dp,height=600dp",
     backgroundColor = 0xFFFFFEFE,
     uiMode = Configuration.UI_MODE_NIGHT_NO or Configuration.UI_MODE_TYPE_NORMAL,
     wallpaper = Wallpapers.RED_DOMINATED_EXAMPLE, showSystemUi = true, showBackground = true
@@ -196,10 +194,30 @@ fun GreetingPreview() {
                 fathersName = "Jake",
                 familyName = "Jeebs",
                 isFavorite = true,
-                imageRes = R.drawable.mock_avatar,
                 phone = "+1-254-233-22-43",
                 address = "700 Los Esteros Rd, San Jose, CA 95134, USA",
                 email = "had@mail.com"
+            )
+        )
+    }
+}
+
+@Preview(
+    device = "spec:width=400dp,height=600dp",
+    backgroundColor = 0xFFFFFEFE,
+    uiMode = Configuration.UI_MODE_NIGHT_NO or Configuration.UI_MODE_TYPE_NORMAL,
+    wallpaper = Wallpapers.RED_DOMINATED_EXAMPLE, showSystemUi = true, showBackground = true
+)
+@Composable
+fun NoImagePreview() {
+    ComposePrjctXmplTheme {
+        ContactDetails(
+            contact = Contact(
+                name = "Jeerom",
+                familyName = "Jeebs",
+                imageRes = R.drawable.mock_avatar,
+                phone = "---",
+                address = "700 Los Esteros Rd, San Jose, CA 95134, USA",
             )
         )
     }
